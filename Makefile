@@ -20,11 +20,13 @@ TARGET_DIR=/usr/local
 install:
 	for src in $(INSTALL_SOURCES); do \
 		cp bin/$$src $(TARGET_DIR)/bin/$$src; \
+		chmod +x $(TARGET_DIR)/bin/$$src; \
 	done
 
 install-build:
 	@for src in $(INSTALL_BUILD_SOURCES); do \
 		cp bin/$$src $(TARGET_DIR)/bin/$$src; \
+		chmod +x $(TARGET_DIR)/bin/$$src; \
 	done
 
 clean:
