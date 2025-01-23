@@ -75,6 +75,8 @@ if [ "$0" = "${BASH_SOURCE[0]}" ]; then
   done
 
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+else
+  1=""
 fi
 
 prompt_overwrite() {
