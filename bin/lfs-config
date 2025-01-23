@@ -44,36 +44,38 @@ config_usage() {
   esac
 }
 
-POSITIONAL_ARGS=()
+if [ "$0" = "${BASH_SOURCE[0]}" ]; then
+  POSITIONAL_ARGS=()
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    -h|--help)
-      config_usage $POSITIONAL_ARGS
-      exit 0
-      ;;
-    -f|--file)
-      CONFIG_FILE=$2
-      if [ -f $CONFIG_FILE ]; then
-        source $2
-      fi
-      shift # past argument
-      shift # past value
-      ;;
-    -*|--*)
-      echo "Unknown option $1"
-      echo
-      config_usage
-      exit 1
-      ;;
-    *)
-      POSITIONAL_ARGS+=("$1") # save positional arg
-      shift # past argument
-      ;;
-  esac
-done
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      -h|--help)
+        config_usage $POSITIONAL_ARGS
+        exit 0
+        ;;
+      -f|--file)
+        CONFIG_FILE=$2
+        if [ -f $CONFIG_FILE ]; then
+          source $2
+        fi
+        shift # past argument
+        shift # past value
+        ;;
+      -*|--*)
+        echo "Unknown option $1"
+        echo
+        config_usage
+        exit 1
+        ;;
+      *)
+        POSITIONAL_ARGS+=("$1") # save positional arg
+        shift # past argument
+        ;;
+    esac
+  done
 
-set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+  set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+fi
 
 prompt_overwrite() {
   echo -n "The file ($CONFIG_FILE) already exists. Overwrite it? (Y/n) "
