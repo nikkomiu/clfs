@@ -1,0 +1,117 @@
+#!/usr/bin/bash
+
+export MAKEFLAGS=-j$(nproc)
+
+vsn=6.10.5
+config=/boot/config-$vsn
+prev_suffix=prev
+
+function print_usage
+{
+  echo "Usage: $0 [ARGUMENT]..."
+  echo
+  echo "Rebuild the Linux kernel for the operating system."
+  echo "This script is for rebuilding the source kernel of LFS."
+  echo
+  echo "Mandatory arguments to long options are mandatory for short options too."
+  echo "  -j, --jobs=JOB_COUNT      set the maximum number of parallel build jobs to use (default: numbeer of cores)"
+  echo "  -c, --config=CONFIG_PATH  use this file for the initial kernel configuration (default: $config)"
+  echo "      --prev-suffix=SUFFIX  set a custom suffix for the previous kernel build (default: $prev_suffix)"
+  echo "  -r, --reboot              should the system be rebooted after completing the build and install"
+  echo "  -P, --no-prev             skip saving the previous image"
+  echo "  -h, --help                display this help text and exit"
+
+  if [ $UNKNOWN_OPT ]; then
+    exit 1
+  else
+    exit 0
+  fi
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      PRINT_USAGE=1
+      shift # past argument
+      ;;
+    -j|--jobs)
+      export MAKEFLAGS=-j$2
+      shift # past argument
+      shift # past value
+      ;;
+    -r|--reboot)
+      REBOOT_AFTER=1
+      shift # past argument
+      ;;
+    -c|--config)
+      config=$2
+      shift # past argument
+      shift # past value
+      ;;
+    --prev-suffix)
+      prev_suffix=$2
+      shift # past argument
+      shift # past value
+      ;;
+    -P|--no-prev)
+      SKIP_SAVE_PREV=1
+      ;;
+    -*|--*)
+      echo "ERROR: Unknown option provided: $1"
+      echo
+
+      PRINT_USAGE=1
+      UNKNOWN_OPT=$1
+      shift # past argument
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+if [ $PRINT_USAGE -eq 1 ]; then
+  print_usage
+fi
+
+cd /sources/linux-$vsn
+
+make mrproper
+cp $config .config
+
+make menuconfig
+
+make
+if [[ $? -ne 0 ]]; then
+  echo "failed to build the kernel"
+  exit 1
+fi
+
+make modules_install
+if [[ $? -ne 0 ]]; then
+  echo "failed to install modules"
+  exit 1
+fi
+
+if [ $SKIP_SAVE_PREV != 1 ]; then
+  echo "Saving the previous kernel version..."
+
+  # move the current kernel to the previous
+  cp -v /boot/vmlinuz-$vsn-lfs-12.2 /boot/vmlinuz-$vsn-lfs-12.2-$prev_suffix
+  cp -v /boot/System.map-$vsn /boot/System.map-$vsn-$prev_suffix
+  cp -v $config $config-$prev_suffix
+fi
+
+# move the new kernel to boot
+cp -v arch/x86/boot/bzImage /boot/vmlinuz-$vsn-lfs-12.2
+cp -v System.map /boot/System.map-$vsn
+cp -v .config $config
+
+if [ $REBOOT_AFTER = 1 ]; then
+  reboot
+fi

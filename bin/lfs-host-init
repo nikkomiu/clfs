@@ -1,0 +1,54 @@
+#!/bin/bash
+
+. "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
+
+echo "LBD: $LFS_BIN_DIR"
+echo " BD: $BIN_DIR"
+
+function usage() {
+  echo "Usage: $0 $1"
+  echo
+  echo "Initialize the host system for building LFS"
+  echo "This will install necessary dependencies using the package manager on the host"
+  echo
+  echo "This is currently only supported on Debian."
+  echo
+  echo "Arguments:"
+  echo "  -h, --help       display this help and exit"
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+# Install needed packages
+apt-get update
+apt-get install -y build-essential dosfstools gawk bison m4 texinfo
+
+# Reassociate sh to bash
+bash=$(which bash)
+sh=$(which sh)
+rm $sh
+ln -s $bash $sh
+unset bash sh
+
+bash version-check.sh

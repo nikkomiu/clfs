@@ -1,0 +1,63 @@
+#!/bin/bash
+
+. "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
+
+function usage() {
+  echo "Usage: $0 [ARGUMENT]..."
+  echo
+  echo "chroot into the LFS system"
+  echo
+  echo "This will mount the partitions, add the virtual filesystems, and chroot into the LFS system."
+  echo "When you exit the chroot environment the virtual filesystems and partitions will be unmounted."
+  echo
+  echo "Arguments:"
+  echo "  -h, --help       display this help and exit"
+  echo "  -V, --no-virt    do not mount virtual filesystems"
+  echo "  -U, --no-unmount do not unmount partitions after"
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -V|--no-virt)
+      MOUNT_ARGS="$MOUNT_ARGS --no-virt"
+      shift # past argument
+      ;;
+    -U|--no-unmount)
+      SKIP_UNMOUNT=1
+      shift # past argument
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+$LFS_BIN_DIR/lfs-mount $MOUNT_ARGS
+
+chroot "$LFS" /usr/bin/env -i            \
+  HOME=/root                             \
+  TERM="$TERM"                           \
+  PS1='\e[31m(lfs chroot)\e[0m \u:\w\$ ' \
+  PATH=/usr/bin:/usr/sbin                \
+  MAKEFLAGS="-j$(nproc)"                 \
+  TESTSUITEFLAGS="-j$(nproc)"            \
+  /bin/bash --login
+
+if [[ $SKIP_UNMOUNT -ne 1 ]]; then
+  $LFS_BIN_DIR/lfs-umount
+fi

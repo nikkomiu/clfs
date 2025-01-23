@@ -1,0 +1,49 @@
+#!/bin/bash
+
+. "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
+
+function usage() {
+  echo "Usage: $0 [ARGUMENT]..."
+  echo
+  echo "Unmount the LFS partitions."
+  echo
+  echo "The partitions will be unmounted from the LFS working directory ($LFS)"
+  echo
+  echo "Arguments:"
+  echo "  -h, --help    display this help and exit"
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+# unmount virtual filesystems
+umount -v $LFS/dev/pts
+mountpoint -q $LFS/dev/shm && umount -v $LFS/dev/shm
+umount -v $LFS/dev
+umount -v $LFS/run
+umount -v $LFS/proc
+umount -v $LFS/sys
+
+# unmount primary filesystems
+umount -v $LFS/boot/efi
+umount -v $LFS

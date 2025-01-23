@@ -1,0 +1,56 @@
+#!/bin/bash
+
+. "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
+
+function usage() {
+  echo "Usage: $0 [ARGUMENT]..."
+  echo
+  echo "Backup the LFS system to a .tar.xz archive file that contains the contents of the root filesystem."
+  echo "Restoring the system may involve extra steps depending on what the current installation phase is."
+  echo
+  echo "Arguments:"
+  echo "  -h, --help    display this help and exit"
+  echo "  -n, --name    specify the basename of the archive (NAME-LFS_VSN-UNIX_TIME.tar.xz)"
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -n|--name)
+      NAME=$1
+      shift # past argument
+      shift # past value
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+$LFS_BIN_DIR/lfs-mount --no-virt
+
+filename=lfs-backup
+if [ "$NAME" != "" ]; then
+  filename=lfs-$NAME
+fi
+
+cd $LFS
+# TODO: don't store in home by default, store in cwd by default
+tar -cvJpf $HOME/$filename-$LFS_VSN-$(date +%s).tar.xz .
+cd -
+
+$LFS_BIN_DIR/lfs-umount

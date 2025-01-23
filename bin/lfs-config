@@ -1,0 +1,135 @@
+#!/bin/bash
+
+LFS=/mnt/lfs
+LFS_VSN=12.2
+
+LFS_BIN_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+LFS_LIB_DIR="$( readlink -f "$LFS_BIN_DIR/../lib/lfsutil" )"
+
+# check for config file in /etc/lfsutil/config
+if [ -f /etc/lfsutil/config ]; then
+  source /etc/lfsutil/config
+fi
+
+# check for config file in working directory
+if [ -f ./lfsconfig ]; then
+  source ./lfsconfig
+fi
+
+usage() {
+  case $1 in
+    generate)
+      echo "Usage: $0 $1 [ARGUMENT]..."
+      echo
+      echo "Generate a blank configuration for LFS to use during installation."
+      echo
+      echo "Arguments:"
+      echo "  -f, --file FILE  generate the configuration at this file instead"
+      ;;
+
+    *)
+      echo "Usage: $0 [ARGUMENT]..."
+      echo
+      echo "LFS configuration management. This is used to see what configuration options"
+      echo "are currently set as well as used by other LFS scripts to load the configuration."
+      echo "When directly run without a sub-command, this will print the configuration to STDOUT."
+      echo
+      echo "Commands:"
+      echo "  generate         generate a blank configuration file"
+      echo
+      echo "Arguments:"
+      echo "  -h, --help       display this help and exit"
+      echo "  -f, --file FILE  load configuration from the file"
+      ;;
+  esac
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage $POSITIONAL_ARGS
+      exit 0
+      ;;
+    -f|--file)
+      CONFIG_FILE=$2
+      if [ -f $CONFIG_FILE ]; then
+        source $2
+      fi
+      shift # past argument
+      shift # past value
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+prompt_overwrite() {
+  echo -n "The file ($CONFIG_FILE) already exists. Overwrite it? (Y/n) "
+  read OVERWRITE
+  case $OVERWRITE in
+    y|Y|"")
+      ANSWER=1
+      ;;
+
+    n|N)
+      ANSWER=0
+      ;;
+
+    *)
+      prompt_overwrite
+      ;;
+  esac
+}
+
+case $1 in
+  generate)
+    if [[ "$CONFIG_FILE" == "" ]]; then
+      CONFIG_FILE=./lfsconfig
+    fi
+
+    if [ -f $CONFIG_FILE ]; then
+      prompt_overwrite
+      if [[ $ANSWER -eq 0 ]]; then
+        exit 1
+      fi
+    fi
+
+    echo "disk_root_uuid=" > $CONFIG_FILE
+    echo "disk_efi_uuid=" >> $CONFIG_FILE
+    ;;
+
+  "")
+    if [ ! -f $CONFIG_FILE ]; then
+      echo "ERROR: Configuration file $CONFIG_FILE not found!"
+      exit 1
+    fi
+
+    echo "LFS=$LFS"
+    echo "LFS_VSN=$LFS_VSN"
+    echo
+    echo "LFS_BIN_DIR=\"$LFS_BIN_DIR\""
+    echo "LFS_LIB_DIR=\"$LFS_LIB_DIR\""
+    echo
+    echo "disk_root_uuid=$disk_root_uuid"
+    echo "disk_efi_uuid=$disk_efi_uuid"
+    ;;
+
+  *)
+    echo "Unknown command $1"
+    echo
+    usage
+    exit 1
+    ;;
+esac

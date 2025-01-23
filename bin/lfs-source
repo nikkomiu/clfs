@@ -1,0 +1,52 @@
+#!/bin/bash
+
+. "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
+
+function usage() {
+  echo "Usage: $0 [ARGUMENT]..."
+  echo
+  echo "Download and validate the LFS sources"
+  echo
+  echo "Arguments:"
+  echo "  -h, --help    display this help and exit"
+}
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo
+      usage
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+wget --input-file=wget-list --continue --directory-prefix=$LFS/sources
+if [ $? -ne 0 ]; then
+  echo "Failed to download sources"
+  exit 1
+fi
+
+sumdir=$PWD
+pushd $LFS/sources
+  md5sum -c $sumdir/md5sums
+  if [ $? -ne 0 ]; then
+    echo "Failed to validate sources"
+    exit 1
+  fi
+popd
+
+chown root:root $LFS/sources/*
