@@ -9,9 +9,12 @@ backup_usage() {
   echo "Restoring the system may involve extra steps depending on what the current installation phase is."
   echo
   echo "Arguments:"
-  echo "  -h, --help    display this help and exit"
-  echo "  -n, --name    specify the basename of the archive (NAME-LFS_VSN-UNIX_TIME.tar.xz)"
+  echo "  -h, --help      display this help and exit"
+  echo "  -n, --name      specify the basename of the archive (NAME-LFS_VSN-UNIX_TIME.tar.xz)"
+  echo "  -p, --progress  display a progress bar instead of the file list while creating the file"
 }
+
+filename=lfs-backup
 
 POSITIONAL_ARGS=()
 
@@ -22,9 +25,17 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     -n|--name)
-      NAME=$1
+      filename=$2
       shift # past argument
       shift # past value
+      ;;
+    -p|--progress)
+      if [ -f pv ]; then
+        PROGRESS=1
+      else
+        echo "[WARNING] pv is required to show archive progress!"
+      fi
+      shift # past argument
       ;;
     -*|--*)
       echo "Unknown option $1"
@@ -41,16 +52,20 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+$LFS_BIN_DIR/lfs-umount
 $LFS_BIN_DIR/lfs-mount --no-virt
 
-filename=lfs-backup
-if [ "$NAME" != "" ]; then
-  filename=lfs-$NAME
-fi
+filename=$(pwd)/$filename-$LFS_VSN-$(date +%s).tar.xz
 
 cd $LFS
-# TODO: don't store in home by default, store in cwd by default
-tar -cvJpf $HOME/$filename-$LFS_VSN-$(date +%s).tar.xz .
+echo "Starting backup to ($filename)"
+
+if [[ $PROGRESS -eq 1 ]]; then
+  tar cf - . -P | pv -s $(du -sb . | awk '{print $1}') | xz > $filename
+else
+  tar -cvJpf $filename-$LFS_VSN-$(date +%s).tar.xz .
+fi
+
 cd -
 
 $LFS_BIN_DIR/lfs-umount
