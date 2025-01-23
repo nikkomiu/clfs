@@ -39,6 +39,7 @@ config_usage() {
       echo
       echo "Arguments:"
       echo "  -h, --help       display this help and exit"
+      echo "  -v, --verbose    show verbose output"
       echo "  -f, --file FILE  load configuration from the file"
       ;;
   esac
@@ -52,6 +53,10 @@ if [ "$0" = "${BASH_SOURCE[0]}" ]; then
       -h|--help)
         config_usage $POSITIONAL_ARGS
         exit 0
+        ;;
+      -v|--verbose)
+        VERBOSE=1
+        shift # past argument
         ;;
       -f|--file)
         CONFIG_FILE=$2
@@ -79,6 +84,9 @@ if [ "$0" = "${BASH_SOURCE[0]}" ]; then
   COMMAND=$1
 else
   COMMAND=""
+  if [[ $@ == *"-v"* ]]; then
+    VERBOSE=1
+  fi
 fi
 
 prompt_overwrite() {
@@ -122,14 +130,16 @@ case $COMMAND in
       exit 1
     fi
 
-    echo "LFS=$LFS"
-    echo "LFS_VSN=$LFS_VSN"
-    echo
-    echo "LFS_BIN_DIR=\"$LFS_BIN_DIR\""
-    echo "LFS_LIB_DIR=\"$LFS_LIB_DIR\""
-    echo
-    echo "disk_root_uuid=$disk_root_uuid"
-    echo "disk_efi_uuid=$disk_efi_uuid"
+    if [[ $VERBOSE -eq 1 ]]; then
+      echo "LFS=$LFS"
+      echo "LFS_VSN=$LFS_VSN"
+      echo
+      echo "LFS_BIN_DIR=\"$LFS_BIN_DIR\""
+      echo "LFS_LIB_DIR=\"$LFS_LIB_DIR\""
+      echo
+      echo "disk_root_uuid=$disk_root_uuid"
+      echo "disk_efi_uuid=$disk_efi_uuid"
+    fi
     ;;
 
   *)
