@@ -75,8 +75,10 @@ if [ "$0" = "${BASH_SOURCE[0]}" ]; then
   done
 
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+  COMMAND=$1
 else
-  1=""
+  COMMAND=""
 fi
 
 prompt_overwrite() {
@@ -97,7 +99,7 @@ prompt_overwrite() {
   esac
 }
 
-case $1 in
+case $COMMAND in
   generate)
     if [[ "$CONFIG_FILE" == "" ]]; then
       CONFIG_FILE=./lfsconfig
