@@ -2,7 +2,7 @@
 
 . "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
 
-function usage() {
+umount_usage() {
   echo "Usage: $0 [ARGUMENT]..."
   echo
   echo "Unmount the LFS partitions."
@@ -18,13 +18,13 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage
+      umount_usage
       exit 0
       ;;
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      umount_usage
       exit 1
       ;;
     *)

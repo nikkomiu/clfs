@@ -2,7 +2,7 @@
 
 . "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
 
-function usage() {
+source_usage() {
   echo "Usage: $0 [ARGUMENT]..."
   echo
   echo "Download and validate the LFS sources"
@@ -16,13 +16,13 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage
+      source_usage
       exit 0
       ;;
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      source_usage
       exit 1
       ;;
     *)

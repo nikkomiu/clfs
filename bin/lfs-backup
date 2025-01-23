@@ -2,7 +2,7 @@
 
 . "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
 
-function usage() {
+backup_usage() {
   echo "Usage: $0 [ARGUMENT]..."
   echo
   echo "Backup the LFS system to a .tar.xz archive file that contains the contents of the root filesystem."
@@ -18,7 +18,7 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage
+      backup_usage
       exit 0
       ;;
     -n|--name)
@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      backup_usage
       exit 1
       ;;
     *)

@@ -2,7 +2,7 @@
 
 . "$(dirname -- "${BASH_SOURCE[0]}")/lfs-config"
 
-function usage() {
+mount_usage() {
   echo "Mount the LFS partitions"
   echo
   echo "The partitions will be mounted under the LFS working directory ($LFS)"
@@ -17,7 +17,7 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage
+      mount_usage
       exit 0
       ;;
     -V|--no-virt)
@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]]; do
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      mount_usage
       exit 1
       ;;
     *)

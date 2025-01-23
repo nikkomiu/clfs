@@ -5,7 +5,7 @@
 echo "LBD: $LFS_BIN_DIR"
 echo " BD: $BIN_DIR"
 
-function usage() {
+host_init_usage() {
   echo "Usage: $0 $1"
   echo
   echo "Initialize the host system for building LFS"
@@ -22,13 +22,13 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage
+      host_init_usage
       exit 0
       ;;
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      host_init_usage
       exit 1
       ;;
     *)

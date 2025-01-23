@@ -1,15 +1,3 @@
-# Scripts to install on build host
-# lfs-backup
-# lfs-chroot
-# lfs-config
-# lfs-host-init
-# lfs-mount
-# lfs-source
-# lfs-umount
-
-# Scripts to install on LFS host
-# lfs-kernel-build
-
 INSTALL_SOURCES = lfs-kernel-build
 
 INSTALL_BUILD_SOURCES = lfs-backup lfs-chroot lfs-config \

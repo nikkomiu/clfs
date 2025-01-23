@@ -16,7 +16,7 @@ if [ -f ./lfsconfig ]; then
   source ./lfsconfig
 fi
 
-usage() {
+config_usage() {
   case $1 in
     generate)
       echo "Usage: $0 $1 [ARGUMENT]..."
@@ -49,7 +49,7 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      usage $POSITIONAL_ARGS
+      config_usage $POSITIONAL_ARGS
       exit 0
       ;;
     -f|--file)
@@ -63,7 +63,7 @@ while [[ $# -gt 0 ]]; do
     -*|--*)
       echo "Unknown option $1"
       echo
-      usage
+      config_usage
       exit 1
       ;;
     *)
@@ -129,7 +129,7 @@ case $1 in
   *)
     echo "Unknown command $1"
     echo
-    usage
+    config_usage
     exit 1
     ;;
 esac
