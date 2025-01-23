@@ -11,7 +11,10 @@ umount_usage() {
   echo
   echo "Arguments:"
   echo "  -h, --help    display this help and exit"
+  echo "  -v, --verbose display verbose output"
 }
+
+uargs=""
 
 POSITIONAL_ARGS=()
 
@@ -20,6 +23,10 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       umount_usage
       exit 0
+      ;;
+    -v|--verbose)
+      uargs=-v
+      shift # past argument
       ;;
     -*|--*)
       echo "Unknown option $1"
@@ -37,13 +44,13 @@ done
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 # unmount virtual filesystems
-umount -v $LFS/dev/pts
-mountpoint -q $LFS/dev/shm && umount -v $LFS/dev/shm
-umount -v $LFS/dev
-umount -v $LFS/run
-umount -v $LFS/proc
-umount -v $LFS/sys
+umount $uargs $LFS/dev/pts
+mountpoint -q $LFS/dev/shm && umount $uargs $LFS/dev/shm
+umount $uargs $LFS/dev
+umount $uargs $LFS/run
+umount $uargs $LFS/proc
+umount $uargs $LFS/sys
 
 # unmount primary filesystems
-umount -v $LFS/boot/efi
-umount -v $LFS
+umount $uargs $LFS/boot/efi
+umount $uargs $LFS

@@ -9,6 +9,7 @@ mount_usage() {
   echo
   echo "Arguments:"
   echo "  -h, --help    display this help and exit"
+  echo "  -v, --verbose show verbose output when mounting"
   echo "  -V, --no-virt do not mount virtual filesystems"
 }
 
@@ -19,6 +20,11 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       mount_usage
       exit 0
+      ;;
+    -v|--verbose)
+      mkdir_args=-v
+      mount_args=-v
+      shift # past argument
       ;;
     -V|--no-virt)
       NO_VIRT=1
@@ -39,24 +45,24 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-mkdir -pv $LFS
-mount -v -t ext4 /dev/disk/by-uuid/$disk_root_uuid $LFS
+mkdir -p $mkdir_args $LFS
+mount $mount_args -t ext4 /dev/disk/by-uuid/$disk_root_uuid $LFS
 
-mkdir -pv $LFS/boot/efi
-mount -v -t vfat /dev/disk/by-uuid/$disk_efi_uuid $LFS/boot/efi
+mkdir -p $mkdir_args $LFS/boot/efi
+mount $mount_args -t vfat /dev/disk/by-uuid/$disk_efi_uuid $LFS/boot/efi
 
 if [[ $NO_VIRT -ne 1 ]]; then
   # create directories for virtual filesystems
-  mkdir -pv $LFS/{dev,proc,sys,run}
+  mkdir -p $mkdir_args $LFS/{dev,proc,sys,run}
 
-  mount -v --bind /dev $LFS/dev
-  mount -vt devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
-  mount -vt proc proc $LFS/proc
-  mount -vt sysfs sysfs $LFS/sys
-  mount -vt tmpfs tmpfs $LFS/run
+  mount $mount_args --bind /dev $LFS/dev
+  mount $mount_args -t devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
+  mount $mount_args -t proc proc $LFS/proc
+  mount $mount_args -t sysfs sysfs $LFS/sys
+  mount $mount_args -t tmpfs tmpfs $LFS/run
   if [ -h $LFS/dev/shm ]; then
-    install -v -d -m 1777 $LFS$(realpath /dev/shm)
+    install $mkdir_args -d -m 1777 $LFS$(realpath /dev/shm)
   else
-    mount -vt tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
+    mount $mount_args -t tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
   fi
 fi

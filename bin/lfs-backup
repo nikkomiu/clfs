@@ -11,9 +11,11 @@ backup_usage() {
   echo "Arguments:"
   echo "  -h, --help      display this help and exit"
   echo "  -n, --name      specify the basename of the archive (NAME-LFS_VSN-UNIX_TIME.tar.xz)"
+  echo "  -d, --directory store the resulting archive in the specified directory instead of the working dir"
   echo "  -p, --progress  display a progress bar instead of the file list while creating the file"
 }
 
+dirname=$(pwd)
 filename=lfs-backup
 
 POSITIONAL_ARGS=()
@@ -29,8 +31,19 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -d|--directory)
+      if [ -d $2 ]; then
+        dirname=$2
+      else
+        echo "[ERROR] the output directory does not exist!"
+        exit 1
+      fi
+
+      shift # past argument
+      shift # past value
+      ;;
     -p|--progress)
-      if [ -f pv ]; then
+      if command -v pv 2>&1 > /dev/null; then
         PROGRESS=1
       else
         echo "[WARNING] pv is required to show archive progress!"
@@ -55,7 +68,7 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 $LFS_BIN_DIR/lfs-umount
 $LFS_BIN_DIR/lfs-mount --no-virt
 
-filename=$(pwd)/$filename-$LFS_VSN-$(date +%s).tar.xz
+filename=$dirname/$filename-$LFS_VSN-$(date +%s).tar.xz
 
 cd $LFS
 echo "Starting backup to ($filename)"
